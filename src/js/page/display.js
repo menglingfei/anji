@@ -8,8 +8,10 @@ $( function () {
         mySwiper2,
         myPlayer1,
         myPlayer2,
-        // 当前播放的任务的序号
-        currentTaskNo = 0,
+        // tab1 当前播放的任务的序号
+        currentTaskNo1 = 0,
+        // tab2 当前播放的任务的序号
+        currentTaskNo2 = 0,
         // 仅用于轮播图中，在监听轮播图的滑动事件时，区分改时间的触发是否来自于下拉列表被点击
         nameListElclicked = false;
     axios.defaults.headers.common['Authorization'] = _TOKEN;
@@ -36,23 +38,23 @@ $( function () {
     });
     $('.prev').on('click', function () {
         nameListElclicked = true;
-        if (0 === currentTaskNo) {
-            currentTaskNo = $('.jNameList li').length - 1;
+        if (0 === currentTaskNo1) {
+            currentTaskNo1 = $('.jNameList li').length - 1;
         } else {
-            currentTaskNo--;
+            currentTaskNo1--;
         }
-        let _tab = $($($('.jNameList li')[currentTaskNo]).children('a')[0]).attr('data-tab');
-        showCurrentSource(_tab, 0, $(`.jNameList li:eq(${currentTaskNo})`));
+        let _tab = $($($('.jNameList li')[currentTaskNo1]).children('a')[0]).attr('data-tab');
+        showCurrentSource(_tab, 0, $(`.jNameList li:eq(${currentTaskNo1})`));
     });
     $('.next').on('click', function () {
         nameListElclicked = true;
-        if ($('.jNameList li').length - 1 == currentTaskNo) {
-            currentTaskNo = 0;
+        if ($('.jNameList li').length - 1 == currentTaskNo1) {
+            currentTaskNo1 = 0;
         } else {
-            currentTaskNo++;
+            currentTaskNo1++;
         }
-        let _tab = $($($('.jNameList li')[currentTaskNo]).children('a')[0]).attr('data-tab');
-        showCurrentSource(_tab, 0, $(`.jNameList li:eq(${currentTaskNo})`));
+        let _tab = $($($('.jNameList li')[currentTaskNo1]).children('a')[0]).attr('data-tab');
+        showCurrentSource(_tab, 0, $(`.jNameList li:eq(${currentTaskNo1})`));
     });
     function getQueryString(name) {
         let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
@@ -105,11 +107,11 @@ $( function () {
             nameListElclicked = false;
             $(`#swiperWrapper${tab}`).children('.swiper-slide').each(function (index) {
                 if ($(this).hasClass('swiper-slide-active')) {
-                    currentTaskNo = index;
+                    currentTaskNo1 = index;
                 }
             });
-            return;
         }
+
         $('.jNameList li').each(function () {
             let el =  $(this).children('a')[0],
                 dataType = $(el).attr('data-type');
@@ -136,10 +138,10 @@ $( function () {
             on: {
                 slideChange: function () {
                     let _name = $($($('.jNameList li')[this.activeIndex]).children('a')[0]).text();
-                    if ($('.jNameList li').length - 1 == currentTaskNo) {
-                        currentTaskNo = nameListElclicked ? currentTaskNo : 0;
+                    if ($('.jNameList li').length - 1 == currentTaskNo1) {
+                        currentTaskNo1 = nameListElclicked ? currentTaskNo1 : 0;
                     } else {
-                        currentTaskNo = nameListElclicked ? currentTaskNo : currentTaskNo + 1;
+                        currentTaskNo1 = nameListElclicked ? currentTaskNo1 : currentTaskNo1 + 1;
                     }
                     nameListElclicked = false;
                     sendCurrentTask(_name, 0);
@@ -324,7 +326,7 @@ $( function () {
             // 当前被点击的人物名字的序号
             let _index = $($(this).children('a')[0]).attr('data-index');
             nameListElclicked = true;
-            currentTaskNo = parseInt(_index);
+            currentTaskNo1 = parseInt(_index);
             showCurrentSource(_tab, 0, this);
             $('.am-dropdown-flip').dropdown('close');
         });
