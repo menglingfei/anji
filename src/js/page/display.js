@@ -18,8 +18,6 @@ $( function () {
     window.addEventListener('message', function (e) {
         if (e.data.type === 'coursewareH5Close') {
             coursewareH5Close();
-        }else{
-
         }
     }, false);
     function coursewareH5Close() {
@@ -34,7 +32,17 @@ $( function () {
         addDataNameList($(this).attr('data-index'));
     });
     $('.back').on('click', function () {
-        location.href = 'index.html';
+        axios.post(`${_URL}/api/ctrl_cmd/goto_task`, {
+            task_name: '首页',
+            play: 0
+        })
+        .then(function(res){
+            location.href = 'index.html';
+        })
+        .catch(function(err){
+            location.href = 'index.html';
+        });
+
     });
     $('.prev').on('click', function () {
         nameListElclicked = true;
@@ -56,6 +64,35 @@ $( function () {
         let _tab = $($($('.jNameList li')[currentTaskNo1]).children('a')[0]).attr('data-tab');
         showCurrentSource(_tab, 0, $(`.jNameList li:eq(${currentTaskNo1})`));
     });
+    $('body').on('click', '.play', function () {
+        autoPlayStart();
+    });
+    $('body').on('click', '.pause', function () {
+        autoPlayStop();
+    });
+    function autoPlayStart() {
+        let _tab = getCurrentTab();
+        $('.play').hide();
+        $('.pause').show();
+        if (1 == _tab) {
+            mySwiper1.autoplay.start();
+        } else if (2 == _tab) {
+            mySwiper2.autoplay.start();
+        }
+    }
+    function autoPlayStop() {
+        let _tab = getCurrentTab();
+        $('.pause').hide();
+        $('.play').show();
+        if (1 == _tab) {
+            mySwiper1.autoplay.stop();
+        } else if (2 == _tab) {
+            mySwiper2.autoplay.stop();
+        }
+    }
+    function getCurrentTab() {
+        return $($('.jNameList li').children('a')[0]).attr('data-tab');
+    }
     function getQueryString(name) {
         let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
         let r = window.location.search.substr(1).match(reg);
@@ -172,6 +209,16 @@ $( function () {
             that.on('play', function () {
                 sendCurrentTask(_name, 1);
             });
+            /*
+            that.on('timeupdate', function() {
+                if ($(".vjs-remaining-time-display").html() != '0:00' && initLoadPage) { //判断视频真正开始播放 和 重新播放
+                    console.log('开始播放');
+                    $(`#video${_tab}`).removeAttr('muted');
+                    $(`#video${_tab}_html5_api`).removeAttr('muted');
+                    initLoadPage = false;
+                }
+            });
+            */
             that.controlBar.volumePanel.volumeControl.on('mouseup', function () {
                 sendVolume(parseInt(that.volume() * 100));
             });
@@ -239,6 +286,7 @@ $( function () {
                         }
                     }
                 }
+                $('.playIcon').hide();
                 break;
             case 'image':
                 if (!_first) {
@@ -248,9 +296,11 @@ $( function () {
                         mySwiper2.slideTo(_index, 1000, false);
                     }
                 }
+                $('.playIcon').show();
                 break;
             case 'html':
                 $(`#iframe${_tab}`).attr('src', _src);
+                $('.playIcon').hide();
                 break;
             default:
                 break;
