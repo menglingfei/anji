@@ -70,6 +70,12 @@ $( function () {
     $('body').on('click', '.pause', function () {
         autoPlayStop();
     });
+    function restart(_video) {
+        /*
+        _video.setCurrentTime(0);
+        _video.play();
+        */
+    }
     function autoPlayStart() {
         let _tab = getCurrentTab();
         $('.play').hide();
@@ -108,7 +114,7 @@ $( function () {
                         </div>
                         <div class="swiper-pagination"></div>
                     </div>
-                    <video autoplay muted id="video1" style="width: 100%;height: 100%;display: none" class="video-js jVideo vjs-big-play-centered" data-setup='{}'></video>
+                    <video autoplay id="video1" style="width: 100%;height: 100%;display: none" class="video-js jVideo vjs-big-play-centered" data-setup='{}'></video>
                     <iframe id="iframe1" style="width: 100%;height: 100%;display: none" class="jIframe"></iframe>
                 </div>
                 <div data-tab-panel-1 class="am-tab-panel">
@@ -117,7 +123,7 @@ $( function () {
                          </div>
                          <div class="swiper-pagination"></div>
                      </div>
-                     <video autoplay muted id="video2" style="width: 100%;height: 100%;display: none" class="video-js jVideo vjs-big-play-centered" data-setup='{}'></video>
+                     <video autoplay id="video2" style="width: 100%;height: 100%;display: none" class="video-js jVideo vjs-big-play-centered" data-setup='{}'></video>
                      <iframe id="iframe2" style="width: 100%;height: 100%;display: none" class="jIframe"></iframe>
                 </div>`
             );
@@ -130,7 +136,7 @@ $( function () {
                         </div>
                         <div class="swiper-pagination"></div>
                     </div>
-                    <video autoplay muted id="video1" style="width: 100%;height: 100%;display: none" class="video-js jVideo vjs-big-play-centered" data-setup='{}'></video>
+                    <video autoplay id="video1" style="width: 100%;height: 100%;display: none" class="video-js jVideo vjs-big-play-centered" data-setup='{}'></video>
                     <iframe id="iframe1" style="width: 100%;height: 100%;display: none" class="jIframe"></iframe>
 			    </div>`
             );
@@ -148,7 +154,6 @@ $( function () {
                 }
             });
         }
-
         $('.jNameList li').each(function () {
             let el =  $(this).children('a')[0],
                 dataType = $(el).attr('data-type');
@@ -207,6 +212,11 @@ $( function () {
                 sendCurrentTask(_name, 0);
             });
             that.on('play', function () {
+                if (that.currentTime() == 0) {
+                    sendCurrentTask(_name, 1);
+                } else {
+                    sendCurrentTask(_name, 1, 0);
+                }
                 sendCurrentTask(_name, 1);
             });
             /*
@@ -260,6 +270,7 @@ $( function () {
                             test.muted = false;
                         }, 2000);
                         */
+
                     } else {
                         if ( $('#video1 video').attr('src') != _src) {
                             $('#video1 video').attr('src', _src);
@@ -272,6 +283,7 @@ $( function () {
                         } else {
                             _sendRequest = 0;
                         }
+                        (document.getElementById('video1_html5_api')).setCurrentTime(1);
                     }
                 } else if (_tab == 2) {
                     if (!myPlayer2) {
@@ -284,6 +296,7 @@ $( function () {
                         } else {
                             _sendRequest = 0;
                         }
+                        restart(myPlayer2);
                     }
                 }
                 $('.playIcon').hide();
@@ -332,10 +345,11 @@ $( function () {
                 break;
         }
     }
-    function sendCurrentTask(_name, _play) {
+    function sendCurrentTask(_name, _play, _fromBeginning = 1) {
         axios.post(`${_URL}/api/ctrl_cmd/goto_task`, {
             task_name: _name,
-            play: _play
+            play: _play,
+            begin: _fromBeginning
         })
         .then(function(res){
             console.log(res);
