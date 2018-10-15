@@ -31,10 +31,21 @@ $( function () {
         }
         addDataNameList($(this).attr('data-index'));
     });
+    let show = true;
     $('.back').on('click', function () {
+        if (show) {
+            $('.jSwiper').hide();
+            show = false;
+        } else {
+            $('.jSwiper').show();
+            show = true;
+        }
+
+        /*
         axios.post(`${_URL}/api/ctrl_cmd/goto_task`, {
             task_name: '首页',
-            play: 0
+            play: 1,
+            begin: 1
         })
         .then(function(res){
             location.href = 'index.html';
@@ -42,7 +53,7 @@ $( function () {
         .catch(function(err){
             location.href = 'index.html';
         });
-
+        */
     });
     $('.prev').on('click', function () {
         nameListElclicked = true;
@@ -144,10 +155,12 @@ $( function () {
         $('.tab-component').tabs('refresh');
     }
     function renderSourceWraps(tab = 1) {
+        let toAddSliderItem = true;
         //mySwiper && mySwiper.destroy(false);
         // 如果同一tab下包含了image和其他文件类型，则不能这么写
         if ($(`#swiperWrapper${tab}`).children('.swiper-slide').length !== 0) {
             nameListElclicked = false;
+            toAddSliderItem = false;
             $(`#swiperWrapper${tab}`).children('.swiper-slide').each(function (index) {
                 if ($(this).hasClass('swiper-slide-active')) {
                     currentTaskNo1 = index;
@@ -155,12 +168,14 @@ $( function () {
             });
         }
         $('.jNameList li').each(function () {
-            let el =  $(this).children('a')[0],
-                dataType = $(el).attr('data-type');
-            if (dataType === 'image') {
-                $(`#swiperWrapper${tab}`).append(`<div class="swiper-slide"><img class="" src="${$(el).attr('data-url')}" /></div>`);
-            } else if (dataType === 'video') {
-            } else if (dataType === 'html') {
+            if (toAddSliderItem) {
+                let el =  $(this).children('a')[0],
+                    dataType = $(el).attr('data-type');
+                if (dataType === 'image') {
+                    $(`#swiperWrapper${tab}`).append(`<div class="swiper-slide"><img class="" src="${$(el).attr('data-url')}" /></div>`);
+                } else if (dataType === 'video') {
+                } else if (dataType === 'html') {
+                }
             }
         });
         if ($(`#swiperWrapper1`).children('div').length !== 0 && !mySwiper1) {
@@ -177,7 +192,13 @@ $( function () {
                 delay: 3000,
                 disableOnInteraction: false
             },
+            //observer: true,
             on: {
+                /*
+                autoplayStop: function(){
+                    alert('关闭自动切换');
+                },
+                */
                 slideChange: function () {
                     let _name = $($($('.jNameList li')[this.activeIndex]).children('a')[0]).text();
                     if ($('.jNameList li').length - 1 == currentTaskNo1) {
@@ -209,15 +230,17 @@ $( function () {
                 videojs.log('end');
             });
             that.on('pause', function () {
-                sendCurrentTask(_name, 0);
+                sendCurrentTask(_name, 0, 0);
             });
             that.on('play', function () {
+                // alert(that.currentTime());
                 if (that.currentTime() == 0) {
+                    // alert('currentTime===0');
                     sendCurrentTask(_name, 1);
                 } else {
+                    // alert('currentTime!==0');
                     sendCurrentTask(_name, 1, 0);
                 }
-                sendCurrentTask(_name, 1);
             });
             /*
             that.on('timeupdate', function() {
@@ -283,7 +306,7 @@ $( function () {
                         } else {
                             _sendRequest = 0;
                         }
-                        (document.getElementById('video1_html5_api')).setCurrentTime(1);
+                        //(document.getElementById('video1_html5_api')).setCurrentTime(1);
                     }
                 } else if (_tab == 2) {
                     if (!myPlayer2) {
@@ -326,7 +349,7 @@ $( function () {
     function switchContentWrap(_type, tab) {
         switch (_type) {
             case 'video':
-                $('.jSwiper').hide();
+                //$('.jSwiper').hide();
                 $('.jIframe').hide();
                 $('.jVideo').show();
                 $(`#video${tab} video`).show();
@@ -338,11 +361,16 @@ $( function () {
                 break;
             case 'html':
                 $('.jVideo').hide();
-                $('.jSwiper').hide();
+                //$('.jSwiper').hide();
                 $('.jIframe').show();
                 break;
             default:
                 break;
+        }
+        if (tab == 1 && mySwiper1) {
+            mySwiper1.autoplay.start();
+        } else if (tab == 2 && mySwiper2) {
+            mySwiper2.autoplay.start();
         }
     }
     function sendCurrentTask(_name, _play, _fromBeginning = 1) {
