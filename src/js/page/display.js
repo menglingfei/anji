@@ -8,12 +8,12 @@ $( function () {
         mySwiper2,
         myPlayer1,
         myPlayer2,
-        // tab1 当前播放的任务的序号
+        // 当前播放的任务的序号
         currentTaskNo1 = 0,
-        // tab2 当前播放的任务的序号
-        currentTaskNo2 = 0,
         // 仅用于轮播图中，在监听轮播图的滑动事件时，区分改时间的触发是否来自于下拉列表被点击
-        nameListElclicked = false;
+        nameListElclicked = false,
+        // 若存在轮播图，则将轮播图中的所有图片的名字储存，以便swiper失去焦点时使用
+        oSwiperItemList = {};
     axios.defaults.headers.common['Authorization'] = _TOKEN;
     window.addEventListener('message', function (e) {
         if (e.data.type === 'coursewareH5Close') {
@@ -31,17 +31,7 @@ $( function () {
         }
         addDataNameList($(this).attr('data-index'));
     });
-    let show = true;
     $('.back').on('click', function () {
-        if (show) {
-            $('.jSwiper').hide();
-            show = false;
-        } else {
-            $('.jSwiper').show();
-            show = true;
-        }
-
-        /*
         axios.post(`${_URL}/api/ctrl_cmd/goto_task`, {
             task_name: '首页',
             play: 1,
@@ -53,7 +43,6 @@ $( function () {
         .catch(function(err){
             location.href = 'index.html';
         });
-        */
     });
     $('.prev').on('click', function () {
         nameListElclicked = true;
@@ -81,12 +70,12 @@ $( function () {
     $('body').on('click', '.pause', function () {
         autoPlayStop();
     });
+    /*
     function restart(_video) {
-        /*
         _video.setCurrentTime(0);
         _video.play();
-        */
     }
+    */
     function autoPlayStart() {
         let _tab = getCurrentTab();
         $('.play').hide();
@@ -163,7 +152,7 @@ $( function () {
             toAddSliderItem = false;
             $(`#swiperWrapper${tab}`).children('.swiper-slide').each(function (index) {
                 if ($(this).hasClass('swiper-slide-active')) {
-                    currentTaskNo1 = index;
+                    //currentTaskNo1 = index;
                 }
             });
         }
@@ -200,7 +189,10 @@ $( function () {
                 },
                 */
                 slideChange: function () {
-                    let _name = $($($('.jNameList li')[this.activeIndex]).children('a')[0]).text();
+                    //let _name = $($($('.jNameList li')[this.activeIndex]).children('a')[0]).text();
+                    let _arrData = oSwiperItemList.data,
+                        _index = this.activeIndex,
+                        _name = _arrData[_index].name;
                     if ($('.jNameList li').length - 1 == currentTaskNo1) {
                         currentTaskNo1 = nameListElclicked ? currentTaskNo1 : 0;
                     } else {
@@ -287,22 +279,9 @@ $( function () {
                 if (_tab == 1) {
                     if (!myPlayer1) {
                         myPlayer1 = newPlayer(_tab, _src, _currentTaskName);
-                        /*
-                        setTimeout(function () {
-                            var test = document.getElementById('video1_html5_api');
-                            test.muted = false;
-                        }, 2000);
-                        */
-
                     } else {
                         if ( $('#video1 video').attr('src') != _src) {
                             $('#video1 video').attr('src', _src);
-                            /*
-                            setTimeout(function () {
-                                var test = document.getElementById('video1_html5_api');
-                                test.muted = false;
-                            }, 2000);
-                            */
                         } else {
                             _sendRequest = 0;
                         }
@@ -319,7 +298,7 @@ $( function () {
                         } else {
                             _sendRequest = 0;
                         }
-                        restart(myPlayer2);
+                        //restart(myPlayer2);
                     }
                 }
                 $('.playIcon').hide();
@@ -333,6 +312,8 @@ $( function () {
                     }
                 }
                 $('.playIcon').show();
+                $('.play').hide();
+                $('.pause').show();
                 break;
             case 'html':
                 $(`#iframe${_tab}`).attr('src', _src);
@@ -410,6 +391,17 @@ $( function () {
     }
     function renderNameList(arr, tab) {
         $('.jNameList li').remove();
+        if (arr[0].type == 'image') {
+            let arrData = [];
+            oSwiperItemList.tab = tab;
+            for (let i = 0; i < arr.length; i++) {
+                arrData.push({
+                    name: arr[i].name,
+                    type: arr[i].type
+                });
+            }
+            oSwiperItemList.data = arrData;
+        }
         for (let i = 0; i < arr.length; i++) {
             $('.jNameList').append(`<li><a href="javascript:void(0)" data-tab="${tab}" data-index="${i}" data-type="${arr[i].type}" data-url="${arr[i].url}">${arr[i].name}</a></li>`);
         }
