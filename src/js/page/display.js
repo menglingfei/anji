@@ -52,7 +52,7 @@ $( function () {
             currentTaskNo1--;
         }
         let _tab = $($($('.jNameList li')[currentTaskNo1]).children('a')[0]).attr('data-tab');
-        showCurrentSource(_tab, 0, $(`.jNameList li:eq(${currentTaskNo1})`));
+        showCurrentSource(_tab, 0, true, $(`.jNameList li:eq(${currentTaskNo1})`));
     });
     $('.next').on('click', function () {
         nameListElclicked = true;
@@ -62,7 +62,7 @@ $( function () {
             currentTaskNo1++;
         }
         let _tab = $($($('.jNameList li')[currentTaskNo1]).children('a')[0]).attr('data-tab');
-        showCurrentSource(_tab, 0, $(`.jNameList li:eq(${currentTaskNo1})`));
+        showCurrentSource(_tab, 0, true, $(`.jNameList li:eq(${currentTaskNo1})`));
     });
     $('body').on('click', '.play', function () {
         autoPlayStart();
@@ -70,12 +70,6 @@ $( function () {
     $('body').on('click', '.pause', function () {
         autoPlayStop();
     });
-    /*
-    function restart(_video) {
-        _video.setCurrentTime(0);
-        _video.play();
-    }
-    */
     function autoPlayStart() {
         let _tab = getCurrentTab();
         $('.play').hide();
@@ -150,11 +144,13 @@ $( function () {
         if ($(`#swiperWrapper${tab}`).children('.swiper-slide').length !== 0) {
             nameListElclicked = false;
             toAddSliderItem = false;
+            /*
             $(`#swiperWrapper${tab}`).children('.swiper-slide').each(function (index) {
                 if ($(this).hasClass('swiper-slide-active')) {
-                    //currentTaskNo1 = index;
+                    currentTaskNo1 = index;
                 }
             });
+            */
         }
         $('.jNameList li').each(function () {
             if (toAddSliderItem) {
@@ -173,7 +169,7 @@ $( function () {
         if ($(`#swiperWrapper2`).children('div').length !== 0 && !mySwiper2) {
             mySwiper2 = newSwiper('2');
         }
-        showCurrentSource(tab, 1);
+        showCurrentSource(tab, 1, 0);
     }
     function newSwiper(_tab) {
         return new Swiper(`#swiper${_tab}`, {
@@ -181,15 +177,8 @@ $( function () {
                 delay: 3000,
                 disableOnInteraction: false
             },
-            //observer: true,
             on: {
-                /*
-                autoplayStop: function(){
-                    alert('关闭自动切换');
-                },
-                */
                 slideChange: function () {
-                    //let _name = $($($('.jNameList li')[this.activeIndex]).children('a')[0]).text();
                     let _arrData = oSwiperItemList.data,
                         _index = this.activeIndex,
                         _name = _arrData[_index].name;
@@ -227,23 +216,11 @@ $( function () {
             that.on('play', function () {
                 // alert(that.currentTime());
                 if (that.currentTime() == 0) {
-                    // alert('currentTime===0');
                     sendCurrentTask(_name, 1);
                 } else {
-                    // alert('currentTime!==0');
                     sendCurrentTask(_name, 1, 0);
                 }
             });
-            /*
-            that.on('timeupdate', function() {
-                if ($(".vjs-remaining-time-display").html() != '0:00' && initLoadPage) { //判断视频真正开始播放 和 重新播放
-                    console.log('开始播放');
-                    $(`#video${_tab}`).removeAttr('muted');
-                    $(`#video${_tab}_html5_api`).removeAttr('muted');
-                    initLoadPage = false;
-                }
-            });
-            */
             that.controlBar.volumePanel.volumeControl.on('mouseup', function () {
                 sendVolume(parseInt(that.volume() * 100));
             });
@@ -266,8 +243,14 @@ $( function () {
             sendVolume(100);
         }
     }
-    //播放当前资源
-    function showCurrentSource(_tab, _first, _el = $('.jNameList li:eq(0)')) {
+    /**
+     * 播放当前资源
+     * @param _tab
+     * @param _first
+     * @param innerItem {boolean} 判断是否为组内item切换，是-发送请求，否-按原逻辑执行，注意，只针对视频
+     * @param _el
+     */
+    function showCurrentSource(_tab, _first, _innerItem, _el = $('.jNameList li:eq(0)')) {
         let _taskEl = $($(_el).children('a')[0]),
             _type = _taskEl.attr('data-type'),
             _src = _taskEl.attr('data-url'),
@@ -283,22 +266,28 @@ $( function () {
                         if ( $('#video1 video').attr('src') != _src) {
                             $('#video1 video').attr('src', _src);
                         } else {
-                            _sendRequest = 0;
+                            if (_innerItem) {
+                                _sendRequest = 2;
+                                myPlayer1.currentTime(0);
+                            } else {
+                                _sendRequest = 0;
+                            }
                         }
-                        //(document.getElementById('video1_html5_api')).setCurrentTime(1);
                     }
                 } else if (_tab == 2) {
                     if (!myPlayer2) {
                         myPlayer2 = newPlayer(_tab, _src, _currentTaskName);
-                        // document.getElementById('video2_html5_api').muted = false;
                     } else {
                         if ( $('#video2 video').attr('src') != _src) {
                             $('#video2 video').attr('src', _src);
-                            // document.getElementById('video2_html5_api').muted = false;
                         } else {
-                            _sendRequest = 0;
+                            if (_innerItem) {
+                                _sendRequest = 2;
+                                myPlayer2.currentTime(0);
+                            } else {
+                                _sendRequest = 0;
+                            }
                         }
-                        //restart(myPlayer2);
                     }
                 }
                 $('.playIcon').hide();
@@ -323,8 +312,10 @@ $( function () {
                 break;
         }
         switchContentWrap(_type, _tab);
-        if (_sendRequest) {
+        if (_sendRequest === 1) {
             sendCurrentTask(_currentTaskName, 0);
+        } else if (_sendRequest === 2) {
+            sendCurrentTask(_currentTaskName, 1);
         }
     }
     function switchContentWrap(_type, tab) {
@@ -411,7 +402,7 @@ $( function () {
             let _index = $($(this).children('a')[0]).attr('data-index');
             nameListElclicked = true;
             currentTaskNo1 = parseInt(_index);
-            showCurrentSource(_tab, 0, this);
+            showCurrentSource(_tab, 0, true, this);
             $('.am-dropdown-flip').dropdown('close');
         });
         renderSourceWraps(tab);
