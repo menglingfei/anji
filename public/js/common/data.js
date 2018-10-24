@@ -32,7 +32,7 @@ let dataName= [
             {
                 name: '企业形象视频',
                 type: 'video',
-                url: '../元华展厅视频.mp4'
+                url: '../新元华.mp4'
             }
         ]
     },
@@ -193,12 +193,12 @@ let dataName= [
             {
                 name: '嘉兴信息资源共享交互平台01',
                 type: 'html',
-                url: 'http://www.baidu.com'
+                url: './source/html/architecture.html'
             },
             {
                 name: '嘉兴信息资源共享交互平台02',
                 type: 'html',
-                url: 'http://www.google.com'
+                url: './source/html/dataPlatform.html'
             }
         ],
         right: [

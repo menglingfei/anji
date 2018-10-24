@@ -189,6 +189,7 @@ $( function () {
                     }
                     nameListElclicked = false;
                     sendCurrentTask(_name, 0);
+                    sendLightTask();
                 },
             },
             //loop: true,
@@ -211,20 +212,26 @@ $( function () {
                 videojs.log('end');
             });
             that.on('pause', function () {
-                sendCurrentTask(_name, 0, 0);
+                console.log('pause');
+                sendLightTask();
+                sendCurrentTask(_name, 0);
             });
             that.on('play', function () {
                 // alert(that.currentTime());
                 if (that.currentTime() == 0) {
-                    sendCurrentTask(_name, 1);
-                } else {
+                    sendLightTask();
                     sendCurrentTask(_name, 1, 0);
+                } else {
+                    sendLightTask();
+                    sendCurrentTask(_name, 1);
                 }
             });
             that.controlBar.volumePanel.volumeControl.on('mouseup', function () {
+                sendLightTask();
                 sendVolume(parseInt(that.volume() * 100));
             });
             that.controlBar.volumePanel.volumeControl.on('touchend', function () {
+                sendLightTask();
                 sendVolume(parseInt(that.volume() * 100));
             });
             that.controlBar.volumePanel.muteToggle.on('mouseup', function () {
@@ -233,7 +240,24 @@ $( function () {
             that.controlBar.volumePanel.muteToggle.on('touchend', function () {
                 muteToggle();
             });
+            that.controlBar.progressControl.on('mouseup', function () {
+                let ratio = getCurrentProgressRatio(that);
+                alert(ratio);
+                sendLightTask();
+                sendCurrentTask(_name, 1, ratio);
+            });
+            that.controlBar.progressControl.on('touchend', function () {
+                let ratio = getCurrentProgressRatio(that);
+                alert(ratio);
+                sendLightTask();
+                sendCurrentTask(_name, 1, ratio);
+            });
         });
+    }
+    function getCurrentProgressRatio(obj) {
+        let currentSeconds = obj.currentTime();
+        let totalSeconds = obj.duration();
+        return parseInt((currentSeconds / totalSeconds) * 100)
     }
     function muteToggle() {
         let mute = $('.vjs-mute-control').attr('title');
@@ -313,8 +337,10 @@ $( function () {
         }
         switchContentWrap(_type, _tab);
         if (_sendRequest === 1) {
+            sendLightTask();
             sendCurrentTask(_currentTaskName, 0);
         } else if (_sendRequest === 2) {
+            sendLightTask();
             sendCurrentTask(_currentTaskName, 1);
         }
     }
@@ -345,11 +371,11 @@ $( function () {
             mySwiper2.autoplay.start();
         }
     }
-    function sendCurrentTask(_name, _play, _fromBeginning = 1) {
+    function sendCurrentTask(_name, _play, _progress = -1) {
         axios.post(`${_URL}/api/ctrl_cmd/goto_task`, {
             task_name: _name,
             play: _play,
-            begin: _fromBeginning
+            progress: _progress
         })
         .then(function(res){
             console.log(res);
@@ -407,6 +433,17 @@ $( function () {
         });
         renderSourceWraps(tab);
     }
+    function sendLightTask() {
+        axios.post(`${_URL}/api/ctrl_cmd/run_command_group`, {
+            'id': 9
+        })
+        .then(function(res){
+            console.log(res);
+        })
+        .catch(function(err){
+            console.log(err);
+        });
+    }
     function init() {
         let tabNum = getQueryString('tab');
         // 禁用右键
@@ -416,6 +453,7 @@ $( function () {
         index = getQueryString('index');
         addTab(tabNum);
         addDataNameList();
+        sendLightTask();
     }
     init();
 });

@@ -193,12 +193,12 @@ let dataName= [
             {
                 name: '嘉兴信息资源共享交互平台01',
                 type: 'html',
-                url: 'http://www.baidu.com'
+                url: './source/html/architecture.html'
             },
             {
                 name: '嘉兴信息资源共享交互平台02',
                 type: 'html',
-                url: 'http://www.google.com'
+                url: './source/html/dataPlatform.html'
             }
         ],
         right: [
